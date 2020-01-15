@@ -1,14 +1,20 @@
 {
-  "name": "A browser action with a popup that changes the page color",
-  "description": "Change the current page color",
+  "name": "Create & Manage Reminders",
+  "description": "Set reminder & get alerted by a notification",
   "version": "1.0",
+  "manifest_version": 2,
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage",
+    "notifications"
   ],
-  "browser_action": {
-      "default_title": "Set this page's color.",
-      "default_icon": "icon.png",
-      "default_popup": "popup.html"
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
   },
-  "manifest_version": 2
+  "browser_action": {
+      "default_title": "Create & Manage Reminders",
+      "default_icon": "icon.png",
+      "default_popup": "index.html"
+  }
 }

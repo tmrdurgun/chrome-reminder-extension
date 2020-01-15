@@ -3,3 +3,8 @@
 // found in the LICENSE file.
 
 'use strict';
+
+chrome.runtime.onInstalled.addListener(function () {
+    // let promise = Notification.requestPermission();
+
+});

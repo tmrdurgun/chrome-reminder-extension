@@ -4,12 +4,26 @@
 
 'use strict';
 
+import { notificationHelper } from './helpers/notification.js';
+
 const addReminder = () => {
     const title = document.getElementById('title').value;
     const date = document.getElementById('date').value;
     const time = document.getElementById('time').value;
 
     console.log(title, date, time);
+
+    const opt = {
+        type: "basic",
+        title: "Reminder successfully registered!",
+        message: `${title} will be displayed on ${date} - ${time}`,
+        iconUrl: "./notification-icon.png"
+    };
+
+    notificationHelper.create(opt, (res) => {
+        console.log(res);
+    });
+    
 }
 
 document.addEventListener('DOMContentLoaded', () => {
