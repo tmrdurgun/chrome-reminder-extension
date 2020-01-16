@@ -5,13 +5,7 @@ const initialize = async () => {
     await listReminders()
 };
 
-const sendNotification = async (item) => {
-    const opt = {
-        type: "basic",
-        title: "Reminder successfully registered!",
-        message: `${item.title} will be displayed on ${item.date} - ${item.time}`,
-        iconUrl: "./notification-icon.png"
-    };
+const sendNotification = async (item, opt) => {
 
     notificationHelper.create(opt, (res) => {
         console.log(res);
@@ -75,9 +69,16 @@ const registerNewReminder = async (newItem) => {
 
         await createAlarm(newItem.id, convertedDate);
 
-        /* chrome.storage.sync.set({ reminders: reminders }, async () => {
-            await sendNotification(newItem);
-        }); */
+        const opt = {
+            type: "basic",
+            title: "Reminder successfully registered!",
+            message: `${newItem.title} will be displayed on ${newItem.date} - ${newItem.time}`,
+            iconUrl: "./notification-icon.png"
+        };
+
+        chrome.storage.sync.set({ reminders: reminders }, async () => {
+            await sendNotification(newItem, opt);
+        });
     });
 }
 
@@ -212,6 +213,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
-chrome.alarms.onAlarm.addListener((e) => {
-    console.log(e);
+chrome.alarms.onAlarm.addListener((alarm) => {
+    chrome.storage.sync.get(['reminders'], async (result) => {
+        const reminders = result.reminders;
+
+        const item = reminders.find(reminder => reminder.id === alarm.name);
+
+        const opt = {
+            type: "basic",
+            title: item.title,
+            message: '',
+            iconUrl: "./alarm-icon.png"
+        };
+
+        await sendNotification(item, opt);
+
+        chrome.alarms.clear(alarm.name, async () => {
+            await removeReminder(item.id);
+        })
+    });
 })
