@@ -126,8 +126,16 @@ const resetForm = async () => {
 
 }
 
-const removeReminder = async (id) => {
+const removeReminder = async (itemId) => {
+    chrome.storage.sync.get(['reminders'], async (result) => {
+        const reminders = result.reminders;
 
+        const item = reminders.find(reminder => reminder.id === itemId);
+
+        reminders.splice(reminders.indexOf(item), 1);
+
+        chrome.storage.sync.set({ reminders: reminders }, () => {});
+    });
 }
 
 const addReminder = async () => {
@@ -169,6 +177,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await updateFormFields(item.id);
             });
         });
+
+        const removeItemNodes = document.querySelectorAll('.remove-item');
+
+        removeItemNodes.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await removeReminder(item.id);
+            });
+        });
+
     }, 1000);
 
 });
