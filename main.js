@@ -48,9 +48,15 @@ const listReminders = async () => {
     })
 }
 
+const createAlarm = async (name, when) => {
+    chrome.alarms.create(name, {
+        when: when
+    });
+}
+
 /* Register reminder into storage */
 const registerNewReminder = async (newItem) => {
-    chrome.storage.sync.get(['reminders'], (result) => {
+    chrome.storage.sync.get(['reminders'], async (result) => {
         let reminders = result.reminders;
 
         if (!reminders) {
@@ -59,9 +65,19 @@ const registerNewReminder = async (newItem) => {
 
         reminders.push(newItem);
 
-        chrome.storage.sync.set({ reminders: reminders }, async () => {
+        console.log(newItem);
+         
+
+        const date = new Date(newItem.date + ' ' + newItem.time);
+        const convertedDate = date.getTime();
+
+        console.log(date, convertedDate);
+
+        await createAlarm(newItem.id, convertedDate);
+
+        /* chrome.storage.sync.set({ reminders: reminders }, async () => {
             await sendNotification(newItem);
-        });
+        }); */
     });
 }
 
@@ -72,9 +88,6 @@ const removeAllReminders = async () => {
 const editReminder = async (itemId) => {
     chrome.storage.sync.get(['reminders'], async (result) => {
         const reminders = result.reminders;
-
-        /*  const editReminderBtn = document.getElementById('edit-reminder-btn');
-         const itemId = editReminderBtn.dataset.reminderid; */
 
         const item = reminders.find(reminder => reminder.id === itemId);
 
@@ -198,3 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 1000);
 
 });
+
+chrome.alarms.onAlarm.addListener((e) => {
+    console.log(e);
+})
