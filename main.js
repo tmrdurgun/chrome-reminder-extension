@@ -1,16 +1,9 @@
-import { notificationHelper } from './helpers/notification.js';
 import { generateId } from './helpers/functions.js';
 
 const initialize = async () => {
-    await listReminders()
+    await removeOldReminders();
+    await listReminders();
 };
-
-const sendNotification = async (item, opt) => {
-
-    notificationHelper.create(opt, (res) => {
-        console.log(res);
-    });
-}
 
 const renderListItem = async (item) => {
     return `<li class="list-group-item reminder-list-item">
@@ -42,6 +35,26 @@ const listReminders = async () => {
     })
 }
 
+const removeOldReminders = async () => {
+    chrome.alarms.getAll(async (result) => {
+        const alarms = result;
+
+        chrome.storage.sync.get(['reminders'], async (result) => {
+            const reminders = result.reminders;
+
+            for (const reminder of reminders) {
+                const isReminderValid = alarms.find(item => item.name === reminder.id);
+
+                if(!isReminderValid) {
+                    await removeReminder(reminder.id);
+                }
+            }
+        });
+
+        
+    })
+}
+
 const createAlarm = async (name, when) => {
     chrome.alarms.create(name, {
         when: when
@@ -59,32 +72,20 @@ const registerNewReminder = async (newItem) => {
 
         reminders.push(newItem);
 
-        console.log(newItem);
-         
-
         const date = new Date(newItem.date + ' ' + newItem.time);
         const convertedDate = date.getTime();
 
-        console.log(date, convertedDate);
-
         await createAlarm(newItem.id, convertedDate);
 
-        const opt = {
-            type: "basic",
-            title: "Reminder successfully registered!",
-            message: `${newItem.title} will be displayed on ${newItem.date} - ${newItem.time}`,
-            iconUrl: "./notification-icon.png"
-        };
-
         chrome.storage.sync.set({ reminders: reminders }, async () => {
-            await sendNotification(newItem, opt);
+            await listReminders();
         });
     });
 }
 
-const removeAllReminders = async () => {
+/* const removeAllReminders = async () => {
     chrome.storage.sync.clear();
-}
+} */
 
 const editReminder = async (itemId) => {
     chrome.storage.sync.get(['reminders'], async (result) => {
@@ -93,15 +94,15 @@ const editReminder = async (itemId) => {
         const item = reminders.find(reminder => reminder.id === itemId);
 
         reminders.forEach(reminder => {
-            if(reminder.id === itemId){
+            if (reminder.id === itemId) {
                 item.title = document.getElementById('title').value;
                 item.date = document.getElementById('date').value;
                 item.time = document.getElementById('time').value;
             }
         });
 
-        chrome.storage.sync.set({ reminders: reminders }, () => {});
-        
+        chrome.storage.sync.set({ reminders: reminders }, () => { });
+
         await resetForm();
 
         await refreshPopup();
@@ -154,7 +155,7 @@ const removeReminder = async (itemId) => {
 
         reminders.splice(reminders.indexOf(item), 1);
 
-        chrome.storage.sync.set({ reminders: reminders }, () => {});
+        chrome.storage.sync.set({ reminders: reminders }, () => { });
 
         await refreshPopup();
     });
@@ -213,23 +214,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-    chrome.storage.sync.get(['reminders'], async (result) => {
-        const reminders = result.reminders;
-
-        const item = reminders.find(reminder => reminder.id === alarm.name);
-
-        const opt = {
-            type: "basic",
-            title: item.title,
-            message: '',
-            iconUrl: "./alarm-icon.png"
-        };
-
-        await sendNotification(item, opt);
-
-        chrome.alarms.clear(alarm.name, async () => {
-            await removeReminder(item.id);
-        })
-    });
-})
