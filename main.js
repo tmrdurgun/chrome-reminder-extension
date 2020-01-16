@@ -19,7 +19,18 @@ const sendNotification = async (item) => {
 }
 
 const renderListItem = async (item) => {
-    return `<li class="list-group-item">${item.title}</li>`;
+    return `<li class="list-group-item reminder-list-item">
+        <div class="reminder-list-item-info">
+            <div><strong>${item.title}</strong></div>
+            <div>${item.date} ${item.time}</div>
+        </div>
+
+        <div class="actions">
+            <i id="${item.id}" class="far fa-edit edit-item"></i>
+            <i id="${item.id}" class="fas fa-trash remove-item"></i> 
+        </div>
+            
+    </li>`;
 }
 
 const listReminders = async () => {
@@ -58,6 +69,63 @@ const removeAllReminders = async () => {
     chrome.storage.sync.clear();
 }
 
+const editReminder = async (itemId) => {
+    chrome.storage.sync.get(['reminders'], async (result) => {
+        const reminders = result.reminders;
+
+        /*  const editReminderBtn = document.getElementById('edit-reminder-btn');
+         const itemId = editReminderBtn.dataset.reminderid; */
+
+        const item = reminders.find(reminder => reminder.id === itemId);
+
+        reminders.forEach(reminder => {
+            if(reminder.id === itemId){
+                item.title = document.getElementById('title').value;
+                item.date = document.getElementById('date').value;
+                item.time = document.getElementById('time').value;
+            }
+        });
+
+        chrome.storage.sync.set({ reminders: reminders }, () => {});
+        
+        await resetForm();
+    });
+}
+
+const updateFormFields = async (itemId) => {
+    chrome.storage.sync.get(['reminders'], async (result) => {
+        const reminders = result.reminders;
+
+        const item = reminders.find(reminder => reminder.id === itemId);
+
+        document.getElementById('title').value = item.title;
+        document.getElementById('date').value = item.date;
+        document.getElementById('time').value = item.time;
+
+        const addReminderBtn = document.getElementById('add-reminder-btn');
+        const editReminderBtn = document.getElementById('edit-reminder-btn');
+
+        addReminderBtn.classList.add('d-none');
+        editReminderBtn.classList.remove('d-none');
+        editReminderBtn.dataset.reminderid = item.id;
+
+    });
+}
+
+const resetForm = async () => {
+    document.getElementById('title').value = '';
+    document.getElementById('date').value = '';
+    document.getElementById('time').value = '';
+
+    const addReminderBtn = document.getElementById('add-reminder-btn');
+    const editReminderBtn = document.getElementById('edit-reminder-btn');
+
+    addReminderBtn.classList.remove('d-none');
+    editReminderBtn.classList.add('d-none');
+    editReminderBtn.dataset.reminderid = '';
+
+}
+
 const removeReminder = async (id) => {
 
 }
@@ -84,5 +152,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     addReminderBtn.addEventListener('click', async () => {
         await addReminder();
-    })
+    });
+
+    const editReminderBtn = document.getElementById('edit-reminder-btn');
+
+    editReminderBtn.addEventListener('click', async (e) => {
+        await editReminder(e.target.dataset.reminderid);
+    });
+
+    setTimeout(() => {
+        const editItemNodes = document.querySelectorAll('.edit-item');
+
+        editItemNodes.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await updateFormFields(item.id);
+            });
+        });
+    }, 1000);
+
 });
