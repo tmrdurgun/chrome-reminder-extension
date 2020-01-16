@@ -89,7 +89,13 @@ const editReminder = async (itemId) => {
         chrome.storage.sync.set({ reminders: reminders }, () => {});
         
         await resetForm();
+
+        await refreshPopup();
     });
+}
+
+const refreshPopup = async () => {
+    window.location.reload();
 }
 
 const updateFormFields = async (itemId) => {
@@ -135,6 +141,8 @@ const removeReminder = async (itemId) => {
         reminders.splice(reminders.indexOf(item), 1);
 
         chrome.storage.sync.set({ reminders: reminders }, () => {});
+
+        await refreshPopup();
     });
 }
 
