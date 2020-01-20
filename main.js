@@ -45,13 +45,13 @@ const removeOldReminders = async () => {
             for (const reminder of reminders) {
                 const isReminderValid = alarms.find(item => item.name === reminder.id);
 
-                if(!isReminderValid) {
+                if (!isReminderValid) {
                     await removeReminder(reminder.id);
                 }
             }
         });
 
-        
+
     })
 }
 
@@ -214,3 +214,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
+window.onload = () => {
+    chrome.browserAction.setIcon({ path: './icons/icon-2.png' });
+}

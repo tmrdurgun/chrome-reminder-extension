@@ -13,8 +13,13 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
         const uint32 = window.crypto.getRandomValues(new Uint32Array(1))[0];
 
-        chrome.notifications.create(uint32.toString(16), opt, () => {});
+        chrome.notifications.create(uint32.toString(16), opt, () => { });
 
-        chrome.alarms.clear(alarm.name, async () => {});
+        chrome.alarms.clear(alarm.name, async () => { });
     });
-})
+});
+
+/* handle popup close event */
+chrome.windows.onFocusChanged.addListener(() => {
+    chrome.browserAction.setIcon({ path: './icons/icon-1.png' });
+});
